@@ -1,7 +1,9 @@
 package org.interkambio.ferias.entity;
 
+import org.springframework.http.ResponseEntity;
+
 public enum FairStatus {
-    DRAFT,
+    OPEN,
     DISPATCHED,
     CLOSED
 }

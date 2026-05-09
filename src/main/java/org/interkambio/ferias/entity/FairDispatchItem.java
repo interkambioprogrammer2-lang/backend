@@ -1,5 +1,7 @@
 package org.interkambio.ferias.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -8,6 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "fair_dispatch_items")
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class FairDispatchItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,6 +18,7 @@ public class FairDispatchItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fair_id", nullable = false)
+    @JsonIgnore   // ← evita la recursión infinita
     private Fair fair;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,14 +39,12 @@ public class FairDispatchItem {
     private Integer quantitySoldManual;
     private String notes;
 
-    // Nuevos campos de fechas
     @Column(name = "sent_date")
     private LocalDateTime sentDate;
 
     @Column(name = "returned_date")
     private LocalDateTime returnedDate;
 
-    // Métodos helper para reportes
     public int getVendidosSistema() {
         return quantitySent - (quantityReturned != null ? quantityReturned : 0);
     }
@@ -52,3 +54,4 @@ public class FairDispatchItem {
         return quantitySent - (quantityReturned != null ? quantityReturned : 0) - vendidos;
     }
 }
+

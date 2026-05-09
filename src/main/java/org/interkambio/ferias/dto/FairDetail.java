@@ -15,6 +15,7 @@ public class FairDetail {
     private LocalDate startDate;
     private LocalDate endDate;
     private String responsibleName;
+    private Long responsibleUserId;   // ← NUEVO CAMPO
     private String status;
     private List<DispatchItemDetail> dispatchItems;
 
@@ -27,7 +28,7 @@ public class FairDetail {
         private String isbn;
         private String title;
         private int quantitySent;
-        private String salePrice; // BigDecimal como String para evitar problemas
+        private String salePrice;
         private Integer quantityReturned;
         private Integer quantitySoldManual;
         private LocalDateTime sentDate;

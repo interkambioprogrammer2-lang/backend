@@ -36,7 +36,7 @@ public class Fair {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private FairStatus status = FairStatus.DRAFT;
+    private FairStatus status = FairStatus.OPEN;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

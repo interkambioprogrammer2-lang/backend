@@ -3,6 +3,7 @@ package org.interkambio.ferias.service;
 import lombok.RequiredArgsConstructor;
 import org.interkambio.ferias.dto.*;
 import org.interkambio.ferias.entity.*;
+import org.interkambio.ferias.exception.NotFoundException;
 import org.interkambio.ferias.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,25 +22,21 @@ public class FairService {
     private final UserRepository userRepository;
     private final InventoryService inventoryService;
 
-    // Método para listar todas las ferias (resumen)
     @Transactional(readOnly = true)
     public List<Fair> getAllFairs() {
-        return fairRepository.findAll();
+        return fairRepository.findAllByOrderByCreatedAtDesc();  // ← antes era findAllByOrderByStartDateDesc()
     }
 
-    // Método que devuelve la entidad Fair (usado por reportes PDF, etc.)
     @Transactional(readOnly = true)
     public Fair getFairById(Long id) {
         return fairRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Feria no encontrada"));
+                .orElseThrow(() -> new NotFoundException("Feria no encontrada"));
     }
 
-    // Método que devuelve un DTO con el detalle para el frontend
     @Transactional(readOnly = true)
     public FairDetail getFairDetailById(Long id) {
         Fair fair = fairRepository.findByIdWithDispatchItems(id)
-                .orElseThrow(() -> new RuntimeException("Feria no encontrada"));
-
+                .orElseThrow(() -> new NotFoundException("Feria no encontrada"));
         List<FairDetail.DispatchItemDetail> items = fair.getDispatchItems().stream()
                 .map(item -> new FairDetail.DispatchItemDetail(
                         item.getId(),
@@ -55,7 +52,6 @@ public class FairService {
                         item.getReturnedDate()
                 ))
                 .collect(Collectors.toList());
-
         return new FairDetail(
                 fair.getId(),
                 fair.getName(),
@@ -63,6 +59,7 @@ public class FairService {
                 fair.getStartDate(),
                 fair.getEndDate(),
                 fair.getResponsible() != null ? fair.getResponsible().getName() : "",
+                fair.getResponsible() != null ? fair.getResponsible().getId() : null,   // ← responsableUserId
                 fair.getStatus().name(),
                 items
         );
@@ -77,20 +74,52 @@ public class FairService {
         fair.setStartDate(request.getStartDate());
         fair.setEndDate(request.getEndDate());
         fair.setResponsible(responsible);
-        fair.setStatus(FairStatus.DRAFT);
+        fair.setStatus(FairStatus.OPEN);
         return fairRepository.save(fair);
+    }
+
+    public Fair updateFair(Long id, FairRequest request) {
+        Fair fair = fairRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Feria no encontrada"));
+
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new RuntimeException("El nombre es obligatorio");
+        }
+        if (request.getStartDate() == null) {
+            throw new RuntimeException("La fecha de inicio es obligatoria");
+        }
+        if (request.getEndDate() == null) {
+            throw new RuntimeException("La fecha de fin es obligatoria");
+        }
+        if (request.getResponsibleUserId() == null) {
+            throw new RuntimeException("El responsable es obligatorio");
+        }
+
+        User responsible = userRepository.findById(request.getResponsibleUserId())
+                .orElseThrow(() -> new NotFoundException("Usuario responsable no encontrado"));
+
+        fair.setName(request.getName());
+        fair.setPlace(request.getPlace());
+        fair.setStartDate(request.getStartDate());
+        fair.setEndDate(request.getEndDate());
+        fair.setResponsible(responsible);
+
+        fair = fairRepository.save(fair);
+        // Refrescar la entidad para asegurar que el responsable está completamente cargado
+        return fairRepository.findById(fair.getId())
+                .orElseThrow(() -> new NotFoundException("Feria recién actualizada no encontrada"));
     }
 
     public Fair addDispatchItems(Long fairId, List<DispatchItemRequest> items) {
         Fair fair = getFairById(fairId);
-        if (fair.getStatus() != FairStatus.DRAFT) {
-            throw new RuntimeException("Solo se pueden agregar libros en estado DRAFT");
+        if (fair.getStatus() != FairStatus.OPEN) {
+            throw new RuntimeException("Solo se pueden agregar libros en estado OPEN");
         }
         for (DispatchItemRequest req : items) {
             Book book = bookRepository.findById(req.getBookId())
-                    .orElseThrow(() -> new RuntimeException("Libro no encontrado"));
+                    .orElseThrow(() -> new NotFoundException("Libro no encontrado"));
             Warehouse location = warehouseRepository.findById(req.getSourceLocationId())
-                    .orElseThrow(() -> new RuntimeException("Ubicación no encontrada"));
+                    .orElseThrow(() -> new NotFoundException("Ubicación no encontrada"));
 
             FairDispatchItem item = new FairDispatchItem();
             item.setFair(fair);
@@ -108,8 +137,8 @@ public class FairService {
 
     public Fair confirmDispatch(Long fairId) {
         Fair fair = getFairById(fairId);
-        if (fair.getStatus() != FairStatus.DRAFT) {
-            throw new RuntimeException("La feria ya no está en borrador");
+        if (fair.getStatus() != FairStatus.OPEN) {
+            throw new RuntimeException("La feria ya no está abierta");
         }
         LocalDateTime now = LocalDateTime.now();
         for (FairDispatchItem item : fair.getDispatchItems()) {
@@ -129,7 +158,7 @@ public class FairService {
         LocalDateTime now = LocalDateTime.now();
         for (ReturnRequest ret : returns) {
             FairDispatchItem item = dispatchItemRepository.findById(ret.getDispatchItemId())
-                    .orElseThrow(() -> new RuntimeException("Ítem no encontrado"));
+                    .orElseThrow(() -> new NotFoundException("Ítem no encontrado"));
             if (!item.getFair().getId().equals(fairId)) {
                 throw new RuntimeException("El ítem no pertenece a esta feria");
             }

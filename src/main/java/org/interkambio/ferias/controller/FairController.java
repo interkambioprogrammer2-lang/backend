@@ -53,6 +53,13 @@ public class FairController {
         return ResponseEntity.ok(fairService.getFairDetailById(id));
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "Editar una feria existente")
+    public ResponseEntity<Fair> updateFair(@PathVariable Long id, @RequestBody FairRequest request) {
+        Fair updated = fairService.updateFair(id, request);
+        return ResponseEntity.ok(updated);
+    }
+
     @PostMapping("/{id}/dispatch-items")
     @Operation(summary = "Agregar libros al envío")
     public ResponseEntity<Fair> addItems(@PathVariable Long id,
@@ -76,7 +83,7 @@ public class FairController {
     @GetMapping("/{id}/report/sendout")
     @Operation(summary = "Generar PDF del listado de envío")
     public ResponseEntity<byte[]> getSendOutReport(@PathVariable Long id) {
-        Fair fair = fairService.getFairById(id);   // <-- entidad Fair
+        Fair fair = fairService.getFairById(id);
         byte[] pdf = pdfService.generateSendOutReport(fair);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -88,7 +95,7 @@ public class FairController {
     @GetMapping("/{id}/report/final")
     @Operation(summary = "Generar PDF del resumen final")
     public ResponseEntity<byte[]> getFinalReport(@PathVariable Long id) {
-        Fair fair = fairService.getFairById(id);   // <-- entidad Fair
+        Fair fair = fairService.getFairById(id);
         byte[] pdf = pdfService.generateFinalReport(fair);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

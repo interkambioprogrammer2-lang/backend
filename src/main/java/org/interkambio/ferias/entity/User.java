@@ -18,4 +18,9 @@ public class User {
 
     @Column(name = "email")
     private String email;
+
+    // Getter personalizado que nunca retorna null
+    public String getName() {
+        return name != null ? name : (email != null ? email : "Usuario " + id);
+    }
 }
