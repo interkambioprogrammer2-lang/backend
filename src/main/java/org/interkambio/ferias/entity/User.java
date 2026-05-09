@@ -11,7 +11,11 @@ import lombok.Data;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")   // coincide con la columna real (mayúscula)
     private Long id;
+
+    @Column(name = "username")
+    private String username;
 
     @Column(name = "name")
     private String name;
@@ -19,8 +23,5 @@ public class User {
     @Column(name = "email")
     private String email;
 
-    // Getter personalizado que nunca retorna null
-    public String getName() {
-        return name != null ? name : (email != null ? email : "Usuario " + id);
-    }
+    // si hay otras columnas como Password, Role_id, no las mapeamos porque no las usamos
 }
