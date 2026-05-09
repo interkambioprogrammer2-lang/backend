@@ -111,4 +111,11 @@ public class FairController {
         fairService.deleteFair(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{fairId}/dispatch-items/{itemId}")
+    @Operation(summary = "Eliminar un libro del envío de una feria (solo estado OPEN)")
+    public ResponseEntity<Void> removeDispatchItem(@PathVariable Long fairId, @PathVariable Long itemId) {
+        fairService.removeDispatchItem(fairId, itemId);
+        return ResponseEntity.noContent().build();
+    }
 }

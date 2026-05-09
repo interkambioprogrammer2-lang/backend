@@ -179,9 +179,25 @@ public class FairService {
         fair.setStatus(FairStatus.CLOSED);
         return fairRepository.save(fair);
     }
+
     public void deleteFair(Long id) {
         Fair fair = getFairById(id);
         // Puedes agregar validaciones, por ejemplo, no permitir eliminar si está DISPATCHED/CLOSED
         fairRepository.delete(fair);
+    }
+
+    public void removeDispatchItem(Long fairId, Long itemId) {
+        Fair fair = getFairById(fairId);
+        // Solo permitimos eliminar si la feria está en estado OPEN (antes de confirmar)
+        if (fair.getStatus() != FairStatus.OPEN) {
+            throw new RuntimeException("Solo se pueden eliminar libros en estado OPEN");
+        }
+        FairDispatchItem item = dispatchItemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Ítem no encontrado"));
+        if (!item.getFair().getId().equals(fairId)) {
+            throw new RuntimeException("El ítem no pertenece a esta feria");
+        }
+        fair.getDispatchItems().remove(item);
+        dispatchItemRepository.delete(item);
     }
 }
