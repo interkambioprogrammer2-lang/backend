@@ -1,6 +1,5 @@
 package org.interkambio.ferias.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -18,7 +17,7 @@ public class FairDispatchItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fair_id", nullable = false)
-    @JsonIgnore   // ← evita la recursión infinita
+    @JsonIgnoreProperties("dispatchItems")
     private Fair fair;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -54,4 +53,3 @@ public class FairDispatchItem {
         return quantitySent - (quantityReturned != null ? quantityReturned : 0) - vendidos;
     }
 }
-

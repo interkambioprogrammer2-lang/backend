@@ -1,17 +1,18 @@
 package org.interkambio.ferias.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "books")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,9 +27,6 @@ public class Book {
     @Column(name = "isbn")
     private String isbn;
 
-    // Mapeamos selling_price al campo 'price' para mantener compatibilidad
     @Column(name = "selling_price")
     private BigDecimal price;
-
-    // Las demás columnas que no uses en el módulo las puedes omitir.
 }

@@ -22,7 +22,7 @@ public class BookStockLocation {
     @Column(name = "location_id")
     private Long locationId;
 
-    @Column(name = "quantity")   // usamos 'quantity' que es la columna de stock real
+    @Column(name = "stock")   // usamos 'quantity' que es la columna de stock real
     private int quantity;
 
     // Podrías agregar otros campos como location_type, book_condition si los necesitas

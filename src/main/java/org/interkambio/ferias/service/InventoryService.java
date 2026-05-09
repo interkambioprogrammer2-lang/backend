@@ -16,7 +16,7 @@ public class InventoryService {
 
     public void discountStock(Long bookId, Long warehouseId, int quantity, String txType, Long referenceId) {
         BookStockLocation stock = stockRepo
-                .findFirstByBookIdAndWarehouseIdWithSufficientStock(bookId, warehouseId, quantity)
+                .findTopByBookIdAndWarehouseIdAndQuantityGreaterThanEqualOrderByQuantityDesc(bookId, warehouseId, quantity)
                 .orElseThrow(() -> new RuntimeException("No hay suficiente stock del libro en ese almacén"));
         stock.setQuantity(stock.getQuantity() - quantity);
         stockRepo.save(stock);
@@ -24,7 +24,7 @@ public class InventoryService {
         InventoryTransaction tx = new InventoryTransaction();
         tx.setTransactionType(txType);
         tx.setBookId(bookId);
-        tx.setLocationId(warehouseId); // almacenamos el warehouseId como referencia
+        tx.setLocationId(warehouseId);
         tx.setQuantityChange(-quantity);
         tx.setReferenceId(referenceId);
         tx.setCreatedAt(LocalDateTime.now());
@@ -32,10 +32,8 @@ public class InventoryService {
     }
 
     public void addStock(Long bookId, Long warehouseId, int quantity, String txType, Long referenceId) {
-        // Para el retorno buscamos el mismo registro que tenía stock (podría ser el que se usó originalmente)
-        // Usamos la misma consulta pero sin requerir stock mínimo
         BookStockLocation stock = stockRepo
-                .findFirstByBookIdAndWarehouseIdWithSufficientStock(bookId, warehouseId, 0)
+                .findTopByBookIdAndWarehouseIdOrderByQuantityDesc(bookId, warehouseId)
                 .orElseThrow(() -> new RuntimeException("No se encontró registro de stock para reposición"));
         stock.setQuantity(stock.getQuantity() + quantity);
         stockRepo.save(stock);
