@@ -179,4 +179,9 @@ public class FairService {
         fair.setStatus(FairStatus.CLOSED);
         return fairRepository.save(fair);
     }
+    public void deleteFair(Long id) {
+        Fair fair = getFairById(id);
+        // Puedes agregar validaciones, por ejemplo, no permitir eliminar si está DISPATCHED/CLOSED
+        fairRepository.delete(fair);
+    }
 }

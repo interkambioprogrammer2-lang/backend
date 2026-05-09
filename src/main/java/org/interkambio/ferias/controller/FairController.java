@@ -6,6 +6,7 @@ import org.interkambio.ferias.dto.*;
 import org.interkambio.ferias.entity.Fair;
 import org.interkambio.ferias.service.FairService;
 import org.interkambio.ferias.service.PdfService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -102,5 +103,12 @@ public class FairController {
         headers.setContentDisposition(ContentDisposition.attachment()
                 .filename("resumen_feria_" + id + ".pdf").build());
         return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar una feria")
+    public ResponseEntity<Void> deleteFair(@PathVariable Long id) {
+        fairService.deleteFair(id);
+        return ResponseEntity.noContent().build();
     }
 }
